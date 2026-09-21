@@ -3,7 +3,7 @@ import fs from 'node:fs';
 const EXPORT = new URL('..', import.meta.url).pathname;
 const SRC = `${EXPORT}/index.original.html`;
 const OUT = `${EXPORT}/index.html`;
-const SITE_URL = 'https://iusupov-ramazan.github.io/Bright-Wheels-Detailing/';
+const SITE_URL = 'https://bright-wheels.net/';
 
 // Keep a pristine copy the first time we run.
 if (!fs.existsSync(SRC)) fs.copyFileSync(`${EXPORT}/index.html`, SRC);

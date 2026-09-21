@@ -118,61 +118,56 @@ Save. That is the only part of `index.html` you ever need to edit.
 
 ---
 
-## Part 1 — Put the site on GitHub
+## Part 1 — GitHub and the domain
 
-### 1. Make the repository
+### Already done
 
-You already have one: `github.com/iusupov-ramazan/Bright-Wheels-Detailing`.
-It's currently empty.
+The repo is `github.com/iusupov-ramazan/Bright-Wheels-Detailing`, the site is
+pushed, and Pages is serving `main` / `(root)`. To publish a change later:
 
-### 2. Upload the file
+```bash
+cd export
+git add -A && git commit -m "what changed" && git push
+```
 
-On the empty repo page, click **uploading an existing file**. Drag `index.html`
-in. Click **Commit changes**. That's the whole upload — one file.
+Pages redeploys within a minute or two.
 
-### 3. Turn on GitHub Pages
+### 4. Your domain — bright-wheels.net
 
-In the repo, go to **Settings → Pages**. Under "Branch", pick `main` and
-`/ (root)`. Click **Save**.
+The domain is already registered at Squarespace and already set as the custom
+domain in GitHub Pages. The only thing left is DNS, and it's all in the
+Squarespace panel: **Settings → Domains → bright-wheels.net → DNS Settings**.
 
-Wait two or three minutes, then your site is live at:
+**Step 1 — delete the "Squarespace Defaults" preset.** Use the bin icon on the
+whole preset block. That removes the four A records, the `www` CNAME pointing
+at `ext-sq.squarespace.com`, and the HTTPS record in one go. All three point at
+Squarespace's servers and all three have to go — the HTTPS record especially,
+because it pins Squarespace's IP addresses and will keep sending some browsers
+to the wrong place even after you fix the A records.
+
+**Step 2 — add these under "Custom records":**
+
+| Type | Name | Data |
+|---|---|---|
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| CNAME | www | iusupov-ramazan.github.io |
+
+Leave the **Email Security** preset alone. Those three TXT records say "no mail
+is ever sent from this domain", which is correct and worth keeping.
+
+**Step 3 — wait, then tick the box.** DNS takes anywhere from ten minutes to a
+few hours. On the GitHub Pages settings page, press **Check again** until the
+red "improperly configured" banner clears. Once it does, **Enforce HTTPS**
+becomes available — tick it. GitHub issues the certificate free.
+
+Until DNS propagates the site is live at the GitHub address:
 
 ```
 https://iusupov-ramazan.github.io/Bright-Wheels-Detailing/
 ```
-
-### 4. (Later) Put your real domain on it
-
-Buy `brightwheelsdetailing.com` from Namecheap or Cloudflare (~$12/yr). Then:
-
-- In **Settings → Pages → Custom domain**, type your domain and save.
-- At your domain registrar, add these DNS records:
-
-  | Type | Name | Value |
-  |---|---|---|
-  | A | @ | 185.199.108.153 |
-  | A | @ | 185.199.109.153 |
-  | A | @ | 185.199.110.153 |
-  | A | @ | 185.199.111.153 |
-  | CNAME | www | iusupov-ramazan.github.io |
-
-- Back on the Pages settings, tick **Enforce HTTPS** once it becomes available.
-
-### Prefer the command line?
-
-```bash
-cd export
-git init
-git add index.html
-git commit -m "Bright Wheels site"
-git branch -M main
-git remote add origin https://github.com/iusupov-ramazan/Bright-Wheels-Detailing.git
-git push -u origin main
-```
-
-Then do step 3 above.
-
----
 
 ## Before you publish — 60-second checklist
 
