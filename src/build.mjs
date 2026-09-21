@@ -1,6 +1,9 @@
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const EXPORT = new URL('..', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname — the project path has spaces and
+// non-ASCII characters, which pathname leaves percent-encoded.
+const EXPORT = fileURLToPath(new URL('..', import.meta.url));
 const SRC = `${EXPORT}/index.original.html`;
 const OUT = `${EXPORT}/index.html`;
 const SITE_URL = 'https://bright-wheels.net/';
