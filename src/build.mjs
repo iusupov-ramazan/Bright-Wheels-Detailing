@@ -34,6 +34,11 @@ tpl = tpl.replace(BTN_OLD, BTN_NEW);
 
 /* ── 3b. markup: static prices in the hero and the pricing note ───────── */
 const TEXT_SWAPS = [
+  // Instagram handle: text -> a tappable link, so the footer actually sends
+  // people somewhere instead of asking them to retype it.
+  ["Mon\u2013Sat, 8am\u20136pm \u00b7 @brightwheelsdetailing",
+   "Mon\u2013Sat, 8am\u20136pm \u00b7 <a href=\"https://instagram.com/bright_wheels_detailing\" target=\"_blank\" rel=\"noopener\" style=\"color: #FFC531; text-decoration: none;\" style-hover=\"color: #FFD866;\">@bright_wheels_detailing</a>"],
+
   ['and we do them rinseless, at your place, for $69.',
    'and we do them rinseless, at your place, from $79.'],
 
@@ -281,6 +286,8 @@ const ok = [
   ['no placeholder title',   !check.includes('Bundled Page')],
   ['og tags',                check.includes('og:image')],
   ['structured data',        check.includes('application/ld+json')],
+  ['new IG handle',          rt.includes('@bright_wheels_detailing')],
+  ['old IG handle gone',     !rt.includes('@brightwheelsdetailing')],
   ['template title',         rt.includes('<title>Bright Wheels')],
 ];
 for (const [label, pass] of ok) console.log((pass ? '  ok   ' : '  FAIL ') + label);

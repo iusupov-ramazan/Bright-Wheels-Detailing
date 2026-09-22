@@ -236,6 +236,6 @@ graphics every time. What to shoot:
 **First things to claim, in this order:**
 1. Google Business Profile — free, and it's how people in your neighbourhood
    actually find a mobile detailer. Do this before the website.
-2. Instagram `@brightwheelsdetailing` — before/after wheel shots are the whole
+2. Instagram `@bright_wheels_detailing` — before/after wheel shots are the whole
    marketing strategy for your first 50 customers.
 3. Nextdoor business page — genuinely effective for driveway services.
