@@ -22,9 +22,9 @@ const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 const PACKAGES = [
   { name: "Wheel Refresh", price: 79,  dur: "/ 60 min",  minutes: 60,  tag: "Our specialty",
     items: ["All four wheels, faces and barrels", "Iron & brake-dust decontamination", "Tires scrubbed and dressed", "Wheel wells cleaned out", "Lug nuts and valve stems"] },
-  { name: "Wheels + Wash", price: 169, dur: "/ 2 hrs",   minutes: 120, tag: "Most booked",
+  { name: "Wheels + Wash", price: 139, dur: "/ 2 hrs",   minutes: 120, tag: "Most booked",
     items: ["Everything in Wheel Refresh", "Rinseless full exterior wash", "Bug & tar removal", "Spray wax sealant", "Glass in and out", "Door jambs wiped"] },
-  { name: "Full Reset",    price: 279, dur: "/ 3\u20134 hrs", minutes: 210, tag: "Best value",
+  { name: "Full Reset",    price: 199, dur: "/ 3\u20134 hrs", minutes: 210, tag: "Best value",
     items: ["Everything in Wheels + Wash", "Interior vacuum & deep clean", "Seats, mats and carpets shampooed", "Dash, vents and console detailed", "Leather cleaned + conditioned"] }
 ];
 
@@ -35,11 +35,8 @@ const SIZES = [
 ];
 
 const ADDONS = [
-  { id: "wheelSeal",  label: "Wheel sealant \u2014 brake dust rinses off next time", price: 70, minutes: 25 },
-  { id: "headlights", label: "Headlight restoration",  price: 70, minutes: 40 },
-  { id: "engineBay",  label: "Engine bay clean",       price: 60, minutes: 30 },
-  { id: "glass",      label: "Glass rain repellent",   price: 30, minutes: 10 },
-  { id: "petHair",    label: "Pet hair removal",       price: 45, minutes: 45, fullResetOnly: true }
+  { id: "glass",   label: "Glass rain repellent", price: 30, minutes: 10 },
+  { id: "petHair", label: "Pet hair removal",     price: 45, minutes: 45, fullResetOnly: true }
 ];
 
 /* The next six open days, starting LEAD_DAYS from today. Rolls forward on
