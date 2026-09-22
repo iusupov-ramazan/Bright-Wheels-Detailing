@@ -147,6 +147,22 @@ const CONFIG = `  <!-- ═══════════════════
     };
   </script>
 
+  <!-- Deep links (/#book, and /book which redirects to it) arrive before the
+       page has rendered, so the browser's own fragment scroll finds nothing
+       and gives up. Retry until the element exists. -->
+  <script>
+    (function () {
+      var id = (location.hash || '').slice(1);
+      if (!id) return;
+      var tries = 0;
+      var timer = setInterval(function () {
+        var el = document.getElementById(id);
+        if (el) { clearInterval(timer); el.scrollIntoView(); }
+        else if (++tries > 100) { clearInterval(timer); }
+      }, 100);
+    })();
+  </script>
+
 `;
 if (html.includes('BRIGHT WHEELS — SETTINGS')) throw new Error('config block already present');
 const headIdx = html.indexOf('  <script>');
