@@ -89,6 +89,19 @@ const PET_OLD = `          <label style="display: flex; align-items: center; gap
 if (!tpl.includes(PET_OLD)) throw new Error('pet hair checkbox not found');
 tpl = tpl.replace(PET_OLD, '');
 
+/* ── 3e. markup: show how long the job will take, next to the price ───── */
+const SUMMARY_OLD = `          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="font: 400 14px/1.3 'Work Sans'; color: #5A6377;">{{ summaryLine }}</div>
+            <div style="font: 900 32px/1 'Archivo', sans-serif; letter-spacing: -0.02em;">{{ total }}</div>
+          </div>`;
+const SUMMARY_NEW = `          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="font: 400 14px/1.4 'Work Sans'; color: #5A6377;">{{ summaryLine }}</div>
+            <div style="font: 900 32px/1 'Archivo', sans-serif; letter-spacing: -0.02em;">{{ total }}</div>
+            <div style="font: 500 13px/1.3 'Work Sans'; color: #8A93A6;">{{ timeLine }}</div>
+          </div>`;
+if (!tpl.includes(SUMMARY_OLD)) throw new Error('summary block not found');
+tpl = tpl.replace(SUMMARY_OLD, SUMMARY_NEW);
+
 /* ── 4. markup: a status line under the button ────────────────────────── */
 const ANCHOR = `${BTN_NEW}
         </div>`;
@@ -217,6 +230,7 @@ const ok = [
   ['status line present',    rt.includes('{{ statusLines }}')],
   ['size step',              rt.includes('{{ sizeOptions }}')],
   ['addons step',            rt.includes('{{ addonOptions }}')],
+  ['time estimate',          rt.includes('{{ timeLine }}')],
   ['old pet checkbox gone',  !rt.includes('{{ togglePet }}')],
   ['steps renumbered',       rt.includes('5 \u00b7 Your details')],
   ['new hero price',         rt.includes('>$79<')],

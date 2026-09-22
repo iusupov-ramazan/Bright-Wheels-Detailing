@@ -64,6 +64,17 @@ function isoDate(d) {
 
 function digitsOnly(s) { return (s || "").replace(/\D/g, ""); }
 
+/* Minutes as something a customer can plan around. Rounded to the nearest
+   quarter hour, because pretending we know it to the minute is a lie. */
+function humanMinutes(total) {
+  const r = Math.round(total / 15) * 15;
+  const h = Math.floor(r / 60);
+  const m = r % 60;
+  if (h && m) return h + (h === 1 ? " hr " : " hrs ") + m + " min";
+  if (h)      return h + (h === 1 ? " hr" : " hrs");
+  return m + " min";
+}
+
 function makeRequestId() {
   return "bw-" + Date.now().toString(36) + "-" +
     Math.random().toString(36).slice(2, 8);
@@ -236,7 +247,8 @@ class Component extends DCLogic {
     const addonOptions = ADDONS.map((a) => {
       const usable = addonAvailable(a);
       return {
-        label: a.label + " (+$" + a.price + ")" + (a.fullResetOnly ? " \u2014 Full Reset only" : ""),
+        label: a.label + " (+$" + a.price + " \u00b7 +" + a.minutes + " min)" +
+               (a.fullResetOnly ? " \u2014 Full Reset only" : ""),
         on: addonOn(a),
         disabled: !usable,
         color: usable ? "#5A6377" : "#A9AFBB",
@@ -296,6 +308,7 @@ class Component extends DCLogic {
         size.label,
         chosenAddons.length ? "+ " + chosenAddons.map((a) => a.short || a.label.split(" \u2014 ")[0]).join(", ") : ""
       ].filter(Boolean).join(" · "),
+      timeLine: "About " + humanMinutes(estMinutes) + " on site",
       total: "$" + amount,
       fields: {
         name: this.state.name, phone: this.state.phone,
