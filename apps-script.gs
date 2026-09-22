@@ -35,11 +35,14 @@ var DAY_START_HOUR = 9;
 var SHEET_NAME = 'Bookings';
 
 var HEADERS = [
-  'Submitted', 'Date', 'Day', 'Package', 'Pet hair', 'Total',
+  'Submitted', 'Date', 'Day', 'Package', 'Vehicle', 'Add-ons', 'Total',
   'Name', 'Phone', 'Address', 'Car', 'Status', 'Request ID', 'Calendar event'
 ];
 
-/** Minutes on site, so the calendar block is the right length. */
+/** Column number (1-based) of a header, so the code survives reordering. */
+function col_(name) { return HEADERS.indexOf(name) + 1; }
+
+/** Fallback minutes if the site doesn't send an estimate. */
 var DURATION = {
   'Wheel Refresh': 60,
   'Wheels + Wash': 120,
@@ -51,16 +54,32 @@ function sheet_() {
   var sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) sh = ss.insertSheet(SHEET_NAME);
 
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(HEADERS);
-    sh.getRange(1, 1, 1, HEADERS.length)
-      .setFontWeight('bold')
-      .setBackground('#10182B')
-      .setFontColor('#FFC531');
-    sh.setFrozenRows(1);
-    sh.setColumnWidth(9, 260);   // Address
+  var last = sh.getLastRow();
+
+  // Write the header row on a fresh sheet — or repair it on a sheet that
+  // has headers but no bookings yet (the columns changed in Sept 2026).
+  // Never touches a sheet that already holds data.
+  if (last === 0) {
+    writeHeaders_(sh);
+  } else if (last === 1) {
+    var cur = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].join('|');
+    if (cur !== HEADERS.join('|')) {
+      sh.clear();
+      writeHeaders_(sh);
+    }
   }
   return sh;
+}
+
+function writeHeaders_(sh) {
+  sh.appendRow(HEADERS);
+  sh.getRange(1, 1, 1, HEADERS.length)
+    .setFontWeight('bold')
+    .setBackground('#10182B')
+    .setFontColor('#FFC531');
+  sh.setFrozenRows(1);
+  sh.setColumnWidth(col_('Address'), 260);
+  sh.setColumnWidth(col_('Add-ons'), 200);
 }
 
 function json_(obj) {
@@ -79,11 +98,14 @@ function counts_() {
   var rows = sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
   var tz = Session.getScriptTimeZone();
 
+  var statusIdx = HEADERS.indexOf('Status');
+  var dateIdx   = HEADERS.indexOf('Date');
+
   for (var i = 0; i < rows.length; i++) {
-    var status = String(rows[i][10] || '').toLowerCase();
+    var status = String(rows[i][statusIdx] || '').toLowerCase();
     if (status === 'cancelled' || status === 'canceled') continue;
 
-    var d = rows[i][1];
+    var d = rows[i][dateIdx];
     if (!d) continue;
     var key = (d instanceof Date)
       ? Utilities.formatDate(d, tz, 'yyyy-MM-dd')
@@ -125,7 +147,7 @@ function doPost(e) {
     // booking can never land twice.
     var reqId = String(data.requestId || '');
     if (reqId && sh.getLastRow() > 1) {
-      var ids = sh.getRange(2, 12, sh.getLastRow() - 1, 1).getValues();
+      var ids = sh.getRange(2, col_('Request ID'), sh.getLastRow() - 1, 1).getValues();
       for (var i = 0; i < ids.length; i++) {
         if (String(ids[i][0]) === reqId) {
           return json_({ ok: true, duplicate: true });
@@ -133,14 +155,15 @@ function doPost(e) {
       }
     }
 
-    var pkg     = String(data.package || '');
-    var petHair = String(data.petHair || 'no');
-    var iso     = String(data.date || '');           // yyyy-mm-dd
-    var total   = data.total || '';
+    var pkg    = String(data.package || '');
+    var iso    = String(data.date || '');            // yyyy-mm-dd
+    var total  = data.total || '';
+    var addons = String(data.addons || '');
+    var size   = String(data.vehicleSize || '');
 
     var eventId = '';
     if (CALENDAR_ID && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-      eventId = addToCalendar_(iso, pkg, petHair, data, counts_()[iso] || 0);
+      eventId = addToCalendar_(iso, pkg, data, counts_()[iso] || 0);
     }
 
     sh.appendRow([
@@ -148,7 +171,8 @@ function doPost(e) {
       iso ? new Date(iso + 'T12:00:00') : '',
       String(data.dayLabel || ''),
       pkg,
-      petHair,
+      size,
+      addons,
       total,
       String(data.name || ''),
       String(data.phone || ''),
@@ -179,14 +203,16 @@ function doPost(e) {
 }
 
 /** Tentative block on the calendar, stacked after anything already booked. */
-function addToCalendar_(iso, pkg, petHair, data, alreadyBooked) {
+function addToCalendar_(iso, pkg, data, alreadyBooked) {
   try {
     var cal = (CALENDAR_ID === 'primary')
       ? CalendarApp.getDefaultCalendar()
       : CalendarApp.getCalendarById(CALENDAR_ID);
     if (!cal) return '';
 
-    var minutes = (DURATION[pkg] || 90) + (petHair === 'yes' ? 45 : 0);
+    // The site sends a time estimate that already includes vehicle size
+    // and add-ons; fall back to the package default if it's missing.
+    var minutes = Number(data.estMinutes) || DURATION[pkg] || 90;
 
     var parts = iso.split('-');
     var start = new Date(+parts[0], +parts[1] - 1, +parts[2], DAY_START_HOUR, 0, 0);
@@ -207,7 +233,8 @@ function addToCalendar_(iso, pkg, petHair, data, alreadyBooked) {
           'Address: ' + (data.address || ''),
           'Car:     ' + (data.car || ''),
           'Package: ' + pkg,
-          'Pet hair: ' + petHair,
+          'Vehicle: ' + (data.vehicleSize || ''),
+          'Add-ons: ' + (data.addons || 'none'),
           'Total:   $' + (data.total || '')
         ].join('\n')
       }
@@ -232,7 +259,7 @@ function notify_(data) {
         (data.dayLabel || data.date || ''),
         data.address || '',
         data.car || '',
-        'Pet hair: ' + (data.petHair || 'no')
+        (data.vehicleSize || '') + (data.addons ? ' \u00b7 + ' + data.addons : '')
       ].join('\n')
     );
   } catch (err) { /* an alert failing must never lose the booking */ }
@@ -249,8 +276,10 @@ function selfTest() {
     date: iso,
     dayLabel: 'TEST',
     package: 'Wheel Refresh',
-    petHair: 'no',
-    total: 69,
+    vehicleSize: 'Sedan / coupe',
+    addons: 'Wheel sealant',
+    estMinutes: 85,
+    total: 149,
     name: 'Self test',
     phone: '555-0100',
     address: '1 Test Street',

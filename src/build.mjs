@@ -32,6 +32,63 @@ const BTN_NEW = `<button type="button" sc-camel-on-click="{{ onSubmit }}" disabl
 if (!tpl.includes(BTN_OLD)) throw new Error('submit button markup not found');
 tpl = tpl.replace(BTN_OLD, BTN_NEW);
 
+/* ── 3b. markup: static prices in the hero and the pricing note ───────── */
+const TEXT_SWAPS = [
+  ['and we do them rinseless, at your place, for $69.',
+   'and we do them rinseless, at your place, from $79.'],
+
+  ['<div style="font: 900 44px/1 \'Archivo\', sans-serif; color: #FFFFFF; letter-spacing: -0.02em;">$69</div>',
+   '<div style="font: 900 44px/1 \'Archivo\', sans-serif; color: #FFFFFF; letter-spacing: -0.02em;">$79</div>'],
+
+  ["Sedan pricing shown. SUVs and trucks add $20. Pet hair removal is +$45 on the Full Reset. Heavy curb rash and refinishing we'll refer out \u2014 we'd rather tell you than guess.",
+   "Sedan pricing shown. Mid-size SUVs add $30, large SUVs and trucks $60. Add-ons are priced on the booking form. Paint correction, ceramic coating, heavy curb rash and refinishing we'll refer out \u2014 we'd rather tell you than guess."],
+];
+for (const [from, to] of TEXT_SWAPS) {
+  if (!tpl.includes(from)) throw new Error('text swap target not found: ' + from.slice(0, 60));
+  tpl = tpl.replace(from, to);
+}
+
+/* ── 3c. markup: vehicle-size and add-on steps, renumbered ─────────────── */
+const LABEL = "font: 600 12px/1 'Work Sans'; letter-spacing: 0.18em; text-transform: uppercase; color: #8A93A6;";
+
+const DETAILS_OLD = `        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="${LABEL}">3 · Your details</div>`;
+if (!tpl.includes(DETAILS_OLD)) throw new Error('details heading not found');
+
+const NEW_STEPS = `        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="${LABEL}">3 · Vehicle size</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <sc-for list="{{ sizeOptions }}" as="v" hint-placeholder-count="3">
+              <button type="button" sc-camel-on-click="{{ v.select }}" style="font: 600 15px/1 'Work Sans'; padding: 14px 20px; min-height: 44px; border-radius: 999px; cursor: pointer; border: 1.5px solid {{ v.border }}; background: {{ v.bg }}; color: {{ v.fg }};">{{ v.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="${LABEL}">4 · Add-ons <span style="letter-spacing: 0; text-transform: none; font-weight: 400; color: #A9AFBB;">— optional</span></div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <sc-for list="{{ addonOptions }}" as="a" hint-placeholder-count="5">
+              <label style="display: flex; align-items: center; gap: 10px; font: 400 15px/1.4 'Work Sans'; color: {{ a.color }}; cursor: {{ a.cursor }}; padding: 7px 0;">
+                <input type="checkbox" checked="{{ a.on }}" disabled="{{ a.disabled }}" sc-camel-on-change="{{ a.toggle }}" style="width: 20px; height: 20px; accent-color: #1E6FB8; cursor: {{ a.cursor }}; flex: none;">
+                {{ a.label }}
+              </label>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="${LABEL}">5 · Your details</div>`;
+tpl = tpl.replace(DETAILS_OLD, NEW_STEPS);
+
+/* ── 3d. markup: retire the standalone pet-hair checkbox ───────────────── */
+const PET_OLD = `          <label style="display: flex; align-items: center; gap: 10px; font: 400 15px/1.4 'Work Sans'; color: {{ petLabelColor }}; cursor: {{ petCursor }}; padding: 6px 0;">
+            <input type="checkbox" checked="{{ petHair }}" disabled="{{ petDisabled }}" sc-camel-on-change="{{ togglePet }}" style="width: 20px; height: 20px; accent-color: #1E6FB8; cursor: {{ petCursor }};">
+            Add pet hair removal (+$45) — Full Reset only
+          </label>
+`;
+if (!tpl.includes(PET_OLD)) throw new Error('pet hair checkbox not found');
+tpl = tpl.replace(PET_OLD, '');
+
 /* ── 4. markup: a status line under the button ────────────────────────── */
 const ANCHOR = `${BTN_NEW}
         </div>`;
@@ -158,6 +215,14 @@ const ok = [
   ['onSubmit bound',         rt.includes('{{ onSubmit }}')],
   ['old submit gone',        !rt.includes('sc-camel-on-click="{{ submit }}"')],
   ['status line present',    rt.includes('{{ statusLines }}')],
+  ['size step',              rt.includes('{{ sizeOptions }}')],
+  ['addons step',            rt.includes('{{ addonOptions }}')],
+  ['old pet checkbox gone',  !rt.includes('{{ togglePet }}')],
+  ['steps renumbered',       rt.includes('5 \u00b7 Your details')],
+  ['new hero price',         rt.includes('>$79<')],
+  ['no stale $69',           !rt.includes('$69')],
+  ['no stale $139',          !rt.includes('$139')],
+  ['no stale $219',          !rt.includes('$219')],
   ['reads BW_CONFIG',        rt.includes('window.BW_CONFIG')],
   ['no hardcoded Sept days', !rt.includes('dow: "MON", num: "22"')],
   ['static title',           /<title>Bright Wheels/.test(check)],

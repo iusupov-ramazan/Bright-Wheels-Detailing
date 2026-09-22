@@ -17,6 +17,31 @@ const DOW   = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+/* ── The menu. Prices and on-site minutes live here and nowhere else. ──── */
+
+const PACKAGES = [
+  { name: "Wheel Refresh", price: 79,  dur: "/ 60 min",  minutes: 60,  tag: "Our specialty",
+    items: ["All four wheels, faces and barrels", "Iron & brake-dust decontamination", "Tires scrubbed and dressed", "Wheel wells cleaned out", "Lug nuts and valve stems"] },
+  { name: "Wheels + Wash", price: 169, dur: "/ 2 hrs",   minutes: 120, tag: "Most booked",
+    items: ["Everything in Wheel Refresh", "Rinseless full exterior wash", "Bug & tar removal", "Spray wax sealant", "Glass in and out", "Door jambs wiped"] },
+  { name: "Full Reset",    price: 279, dur: "/ 3\u20134 hrs", minutes: 210, tag: "Best value",
+    items: ["Everything in Wheels + Wash", "Interior vacuum & deep clean", "Seats, mats and carpets shampooed", "Dash, vents and console detailed", "Leather cleaned + conditioned"] }
+];
+
+const SIZES = [
+  { label: "Sedan / coupe",           extra: 0,  minutes: 0 },
+  { label: "Mid-size SUV",            extra: 30, minutes: 20 },
+  { label: "Large SUV / truck / van", extra: 60, minutes: 40 }
+];
+
+const ADDONS = [
+  { id: "wheelSeal",  label: "Wheel sealant \u2014 brake dust rinses off next time", price: 70, minutes: 25 },
+  { id: "headlights", label: "Headlight restoration",  price: 70, minutes: 40 },
+  { id: "engineBay",  label: "Engine bay clean",       price: 60, minutes: 30 },
+  { id: "glass",      label: "Glass rain repellent",   price: 30, minutes: 10 },
+  { id: "petHair",    label: "Pet hair removal",       price: 45, minutes: 45, fullResetOnly: true }
+];
+
 /* The next six open days, starting LEAD_DAYS from today. Rolls forward on
    its own, so the calendar is never stale — nothing here is hardcoded. */
 function openDays(count) {
@@ -48,7 +73,8 @@ class Component extends DCLogic {
   state = {
     pkg: 1,
     dayIso: "",
-    petHair: false,
+    size: 0,
+    addons: {},          // { wheelSeal: true, ... }
     name: "", phone: "", address: "", car: "",
     status: "idle",     // idle | sending | sent | error
     message: "",
@@ -113,15 +139,10 @@ class Component extends DCLogic {
   }
 
   renderVals() {
-    const tierData = [
-      { name: "Wheel Refresh", price: "$69", dur: "/ 60 min", tag: "Our specialty", items: ["All four wheels, faces and barrels", "Iron & brake-dust decontamination", "Tires scrubbed and dressed", "Wheel wells cleaned out", "Lug nuts and valve stems"] },
-      { name: "Wheels + Wash", price: "$139", dur: "/ 2 hrs", tag: "Most booked", items: ["Everything in Wheel Refresh", "Rinseless full exterior wash", "Bug & tar removal", "Spray wax sealant", "Glass in and out", "Door jambs wiped"] },
-      { name: "Full Reset", price: "$219", dur: "/ 3–4 hrs", tag: "Best value", items: ["Everything in Wheels + Wash", "Interior vacuum & deep clean", "Seats, mats and carpets shampooed", "Dash, vents and console detailed", "Leather cleaned + conditioned"] }
-    ];
-
-    const tiers = tierData.map((t, i) => {
+    const tiers = PACKAGES.map((t, i) => {
       const hot = i === 1;
-      return Object.assign({}, t, {
+      return {
+        name: t.name, price: "$" + t.price, dur: t.dur, tag: t.tag, items: t.items,
         bg: hot ? "#10182B" : "#FFFFFF",
         fg: hot ? "#FFFFFF" : "#10182B",
         border: hot ? "#10182B" : "#E4E7EC",
@@ -131,16 +152,15 @@ class Component extends DCLogic {
         tagFg: hot ? "#10182B" : "#1E6FB8",
         btnBg: hot ? "#FFC531" : "#10182B",
         btnFg: hot ? "#10182B" : "#FFFFFF"
-      });
+      };
     });
 
-    const prices = [69, 139, 219];
-    const names  = ["Wheel Refresh", "Wheels + Wash", "Full Reset"];
+    const names = PACKAGES.map((p) => p.name);
 
     const pkgOptions = names.map((label, i) => {
       const on = this.state.pkg === i;
       return {
-        label: label + " · $" + prices[i],
+        label: label + " · $" + PACKAGES[i].price,
         select: () => this.setState({ pkg: i, status: "idle", message: "" }),
         bg: on ? "#10182B" : "#FFFFFF",
         fg: on ? "#FFFFFF" : "#10182B",
@@ -197,16 +217,56 @@ class Component extends DCLogic {
         " " + chosen.date.getDate() + " " + MONTH[chosen.date.getMonth()]
       : "no day selected";
 
-    const petAllowed = this.state.pkg === 2;
-    const petOn  = petAllowed && this.state.petHair;
-    const amount = prices[this.state.pkg] + (petOn ? 45 : 0);
+    /* ── Vehicle size ─────────────────────────────────────────────────── */
+    const sizeOptions = SIZES.map((sz, i) => {
+      const on = this.state.size === i;
+      return {
+        label: sz.label + (sz.extra ? " +$" + sz.extra : ""),
+        select: () => this.setState({ size: i, status: "idle", message: "" }),
+        bg: on ? "#10182B" : "#FFFFFF",
+        fg: on ? "#FFFFFF" : "#10182B",
+        border: on ? "#10182B" : "#D9DDE5"
+      };
+    });
+
+    /* ── Add-ons. Pet hair needs the interior work, so Full Reset only. ── */
+    const addonAvailable = (a) => !a.fullResetOnly || this.state.pkg === 2;
+    const addonOn = (a) => addonAvailable(a) && !!this.state.addons[a.id];
+
+    const addonOptions = ADDONS.map((a) => {
+      const usable = addonAvailable(a);
+      return {
+        label: a.label + " (+$" + a.price + ")" + (a.fullResetOnly ? " \u2014 Full Reset only" : ""),
+        on: addonOn(a),
+        disabled: !usable,
+        color: usable ? "#5A6377" : "#A9AFBB",
+        cursor: usable ? "pointer" : "not-allowed",
+        toggle: () => {
+          if (!usable) return;
+          this.setState((st) => {
+            const next = Object.assign({}, st.addons);
+            next[a.id] = !next[a.id];
+            return { addons: next, status: "idle", message: "" };
+          });
+        }
+      };
+    });
+
+    const chosenAddons = ADDONS.filter(addonOn);
+    const addonTotal   = chosenAddons.reduce((n, a) => n + a.price, 0);
+    const addonMinutes = chosenAddons.reduce((n, a) => n + a.minutes, 0);
+
+    const pkg    = PACKAGES[this.state.pkg];
+    const size   = SIZES[this.state.size];
+    const amount = pkg.price + size.extra + addonTotal;
+    const estMinutes = pkg.minutes + size.minutes + addonMinutes;
 
     const busy = this.state.status === "sending";
 
     return {
       heroStats: [
         { v: "60min", l: "All four wheels, done right" },
-        { v: "$69", l: "Starting price, flat" },
+        { v: "$" + PACKAGES[0].price, l: "Starting price, flat" },
         { v: "0", l: "Hoses needed — we work rinseless" }
       ],
       founders: [
@@ -228,15 +288,14 @@ class Component extends DCLogic {
       tiers,
       pkgOptions,
       days,
-      petHair: petOn,
-      petAllowed: petAllowed,
-      petDisabled: !petAllowed,
-      petLabelColor: petAllowed ? "#5A6377" : "#A9AFBB",
-      petCursor: petAllowed ? "pointer" : "not-allowed",
-      togglePet: () => {
-        if (petAllowed) this.setState((s) => ({ petHair: !s.petHair, status: "idle", message: "" }));
-      },
-      summaryLine: names[this.state.pkg] + " · " + chosenLabel + (petOn ? " · + pet hair" : ""),
+      sizeOptions,
+      addonOptions,
+      summaryLine: [
+        pkg.name,
+        chosenLabel,
+        size.label,
+        chosenAddons.length ? "+ " + chosenAddons.map((a) => a.short || a.label.split(" \u2014 ")[0]).join(", ") : ""
+      ].filter(Boolean).join(" · "),
       total: "$" + amount,
       fields: {
         name: this.state.name, phone: this.state.phone,
@@ -299,8 +358,10 @@ class Component extends DCLogic {
           submittedAt: new Date().toISOString(),
           date: chosen.iso,
           dayLabel: chosenLabel,
-          package: names[this.state.pkg],
-          petHair: petOn ? "yes" : "no",
+          package: pkg.name,
+          vehicleSize: size.label,
+          addons: chosenAddons.map((a) => a.label.split(" \u2014 ")[0]).join(", "),
+          estMinutes: estMinutes,
           total: amount,
           name: this.state.name.trim(),
           phone: this.state.phone.trim(),
