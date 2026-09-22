@@ -89,12 +89,27 @@
     (function () {
       var id = (location.hash || '').slice(1);
       if (!id) return;
-      var tries = 0;
-      var timer = setInterval(function () {
+
+      // The browser restores scroll to the top after load, which undoes a
+      // single early scrollIntoView. Take the wheel ourselves.
+      try { history.scrollRestoration = 'manual'; } catch (e) {}
+
+      var waited = 0, held = 0, timer = setInterval(function () {
         var el = document.getElementById(id);
-        if (el) { clearInterval(timer); el.scrollIntoView(); }
-        else if (++tries > 100) { clearInterval(timer); }
+        if (el) {
+          el.scrollIntoView();
+          // Keep holding ~1.5s: fonts and the bundle's own render shift the
+          // layout after the element first appears.
+          if (++held > 15) clearInterval(timer);
+        } else if (++waited > 100) {
+          clearInterval(timer);
+        }
       }, 100);
+
+      // Never fight someone who starts scrolling themselves.
+      ['wheel', 'touchstart', 'keydown'].forEach(function (evt) {
+        addEventListener(evt, function () { clearInterval(timer); }, { once: true, passive: true });
+      });
     })();
   </script>
 
