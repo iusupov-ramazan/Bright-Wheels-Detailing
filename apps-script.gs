@@ -44,8 +44,8 @@ function col_(name) { return HEADERS.indexOf(name) + 1; }
 
 /** Fallback minutes if the site doesn't send an estimate. */
 var DURATION = {
-  'Wheel Refresh': 60,
-  'Wheels + Wash': 120,
+  'Wheels': 60,
+  'Wheels + Exterior': 120,
   'Full Reset': 210
 };
 
@@ -275,7 +275,7 @@ function selfTest() {
     requestId: 'selftest-' + Date.now(),
     date: iso,
     dayLabel: 'TEST',
-    package: 'Wheel Refresh',
+    package: 'Wheels',
     vehicleSize: 'Sedan / coupe',
     addons: 'Wheel sealant',
     estMinutes: 85,

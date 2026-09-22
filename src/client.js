@@ -20,12 +20,12 @@ const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 /* ── The menu. Prices and on-site minutes live here and nowhere else. ──── */
 
 const PACKAGES = [
-  { name: "Wheel Refresh", price: 79,  dur: "/ 60 min",  minutes: 60,  tag: "Our specialty",
+  { name: "Wheels", price: 79,  dur: "/ 60 min",  minutes: 60,  tag: "Our specialty",
     items: ["All four wheels, faces and barrels", "Iron & brake-dust decontamination", "Tires scrubbed and dressed", "Wheel wells cleaned out", "Lug nuts and valve stems"] },
-  { name: "Wheels + Wash", price: 139, dur: "/ 2 hrs",   minutes: 120, tag: "Most booked",
-    items: ["Everything in Wheel Refresh", "Rinseless full exterior wash", "Bug & tar removal", "Spray wax sealant", "Glass in and out", "Door jambs wiped"] },
+  { name: "Wheels + Exterior", price: 139, dur: "/ 2 hrs",   minutes: 120, tag: "Most booked",
+    items: ["Everything in Wheels", "Rinseless full exterior wash", "Bug & tar removal", "Spray wax sealant", "Glass in and out", "Door jambs wiped"] },
   { name: "Full Reset",    price: 199, dur: "/ 3\u20134 hrs", minutes: 210, tag: "Best value",
-    items: ["Everything in Wheels + Wash", "Interior vacuum & deep clean", "Seats, mats and carpets shampooed", "Dash, vents and console detailed", "Leather cleaned + conditioned"] }
+    items: ["Everything in Wheels + Exterior", "Interior vacuum & deep clean", "Seats, mats and carpets shampooed", "Dash, vents and console detailed", "Leather cleaned + conditioned"] }
 ];
 
 const SIZES = [
